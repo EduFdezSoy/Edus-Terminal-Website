@@ -1,4 +1,5 @@
 var terminal = new Terminal();
+var is_sudo = false;
 var FILE_LIST = [
     ".",
     "..",
@@ -50,7 +51,11 @@ async function commands(command) {
             break;
 
         case "touch":
-            await print("don't touch that!");
+            if(!is_sudo){
+                await print("don't touch that!");
+            }else{
+                await print("you touched that");
+            }
             break;
 
         case "cd":
@@ -63,6 +68,13 @@ async function commands(command) {
 
         case "rm":
             await print("You don't have permisions.");
+            break;
+
+        case "exit":
+            if(is_sudo){
+                is_sudo = false;
+                terminal.setPrompt("Guest@edufdez-es:~$ ");
+            }
             break;
 
         default:
@@ -133,29 +145,30 @@ async function printCat(command) {
 }
 
 async function printSudo(command) {
-    words = trimSpaces(command).split(' ');
-    switch (words[1]) {
-        case "touch":
-            await print("you touched that");
-            break;
+    if(!is_sudo){
+        words = trimSpaces(command).split(' ');
+        switch (words[1]) {
+            case "touch":
+                await print("you touched that");
+                break;
 
-        case "cat":
-            if (words[2] == "." || words[2] == "..") {
-                print("What are you trying? This is not a real shell, there's nothing in there.");
-            } else {
-                var a = words[1] + " " + words[2];
-                printCat(a);
-            }
-            break;
+            case "cat":
+                if (words[2] == "." || words[2] == "..") {
+                    print("What are you trying? This is not a real shell, there's nothing in there.");
+                } else {
+                    var a = words[1] + " " + words[2];
+                    printCat(a);
+                }
+                break;
 
-        case "rm":
-            await deleteFile(command);
-            break;
-
-        default:
-            terminal.setPrompt("Guest@edufdez-es:~# ");
-            await print("you have now super cow powers");
-            break;
+            default:
+                terminal.setPrompt("Guest@edufdez-es:~# ");
+                await print("you have now super cow powers");
+                is_sudo = true;
+                break;
+        }
+    }else{
+        await print("You can't do a sudo as sudo!");
     }
 }
 

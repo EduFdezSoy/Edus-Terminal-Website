@@ -145,6 +145,7 @@ async function printSudo(command) {
             break;
 
         default:
+            terminal.setPrompt("Guest@edufdez-es:~# ");
             await print("you have now super cow powers");
             break;
     }

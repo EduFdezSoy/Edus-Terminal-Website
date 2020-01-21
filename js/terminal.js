@@ -168,7 +168,7 @@ var Terminal = (function () {
         };
 
         this.blinkingCursor = function (bool) {
-            this.shouldBlinkCursor = bool;
+            this.cursorShoudBlink = bool;
         };
 
         this._input.appendChild(this.inputLine);

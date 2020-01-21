@@ -61,6 +61,10 @@ async function commands(command) {
             await print("");
             break;
 
+        case "rm":
+            await print("You don't have permisions.");
+            break;
+
         default:
             await print(command + ": command not found, type 'help' to see a list of commands.");
             break;
@@ -144,11 +148,67 @@ async function printSudo(command) {
             }
             break;
 
+        case "rm":
+            await deleteFile(command);
+            break;
+
         default:
             terminal.setPrompt("Guest@edufdez-es:~# ");
             await print("you have now super cow powers");
             break;
     }
+}
+
+async function deleteFile(command) {
+    words = trimSpaces(command).split(' ');
+    // [0] is sudo, [1] is rm, [2] may be an arg and [3] a file or something
+    if (words.length == 3) {
+        var index = FILE_LIST.findIndex((e) => e == words[2]);
+        if (index != -1) {
+            FILE_LIST.splice(index, 1);
+            await print("File deleted");
+        }
+    } else if (words.length == 4) {
+        if (words[2].toUpperCase() == "-RF") {
+            var index = FILE_LIST.findIndex((e) => e == words[3]);
+            if (index != -1) {
+                FILE_LIST.splice(index, 1);
+                await print("File deleted");
+            } else if (words[3] == "/") {
+                terminal.blinkingCursor(false);
+                terminal.setPrompt(" ");
+                await sleep(5000);
+                terminal.clear();
+
+                document.getElementById('TermianlInput').style.display = 'none';
+            
+                await sleep(2000);
+                await print("You deleted everything.");
+                await sleep(2000);
+                await print("Are you satisfied?");
+                await sleep(20000);
+                terminal.println();
+                await print("There's nothing here anymore, go home.");
+                await sleep(2000);
+                await print("Or reload the page.");
+                await sleep(Number.MAX_VALUE);
+            }
+        } else {
+            var index = FILE_LIST.findIndex((e) => e == words[3]);
+            if (index != -1) {
+                FILE_LIST.splice(index, 1);
+                await print("File deleted");
+            }
+        }
+    } else {
+        if (words.length < 3) {
+            await print("Argument expected.");
+        } else {
+            await print("Too many arguments.");
+        }
+    }
+
+    return;
 }
 
 //#endregion

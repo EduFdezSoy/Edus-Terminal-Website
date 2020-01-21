@@ -67,7 +67,11 @@ async function commands(command) {
             break;
 
         case "rm":
-            await print("You don't have permisions.");
+            if(!is_sudo){
+                await print("You don't have permisions.");
+            }else{
+                deleteFile(command)
+            }
             break;
 
         case "exit":
@@ -161,6 +165,10 @@ async function printSudo(command) {
                 }
                 break;
 
+            case "rm":
+                await deleteFile(command);
+                break;
+
             default:
                 terminal.setPrompt("Guest@edufdez-es:~# ");
                 await print("you have now super cow powers");
@@ -174,20 +182,24 @@ async function printSudo(command) {
 
 async function deleteFile(command) {
     words = trimSpaces(command).split(' ');
+    var NUM_PARAMS = 3;
+    if(is_sudo){
+        NUM_PARAMS = NUM_PARAMS - 1;
+    }
     // [0] is sudo, [1] is rm, [2] may be an arg and [3] a file or something
-    if (words.length == 3) {
-        var index = FILE_LIST.findIndex((e) => e == words[2]);
+    if (words.length == NUM_PARAMS) {
+        var index = FILE_LIST.findIndex((e) => e == words[NUM_PARAMS-1]);
         if (index != -1) {
             FILE_LIST.splice(index, 1);
             await print("File deleted");
         }
-    } else if (words.length == 4) {
-        if (words[2].toUpperCase() == "-RF") {
-            var index = FILE_LIST.findIndex((e) => e == words[3]);
+    } else if (words.length == NUM_PARAMS+1) {
+        if (words[NUM_PARAMS-1].toUpperCase() == "-RF") {
+            var index = FILE_LIST.findIndex((e) => e == words[NUM_PARAMS]);
             if (index != -1) {
                 FILE_LIST.splice(index, 1);
                 await print("File deleted");
-            } else if (words[3] == "/") {
+            } else if (words[NUM_PARAMS] == "/") {
                 terminal.blinkingCursor(false);
                 terminal.setPrompt(" ");
                 await sleep(5000);
@@ -207,14 +219,14 @@ async function deleteFile(command) {
                 await sleep(Number.MAX_VALUE);
             }
         } else {
-            var index = FILE_LIST.findIndex((e) => e == words[3]);
+            var index = FILE_LIST.findIndex((e) => e == words[NUM_PARAMS]);
             if (index != -1) {
                 FILE_LIST.splice(index, 1);
                 await print("File deleted");
             }
         }
     } else {
-        if (words.length < 3) {
+        if (words.length < NUM_PARAMS) {
             await print("Argument expected.");
         } else {
             await print("Too many arguments.");

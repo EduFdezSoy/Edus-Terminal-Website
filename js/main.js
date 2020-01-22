@@ -142,7 +142,7 @@ async function printCat(command) {
             if (is_sudo || is_temp_sudo)
                 await print("What are you trying? This is not a real shell, there's nothing in there.");
             else
-                await print("You don't have permisions.");
+                await print("cat: Permission denied");
         } else if (FILE_LIST.findIndex((element) => element == words[1]) != -1) {
             terminal.println();
             await loadText('txt/' + words[1] + '.html', print);

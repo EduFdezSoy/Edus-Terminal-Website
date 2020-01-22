@@ -1,6 +1,8 @@
 var terminal = new Terminal();
 var is_sudo = false;
 var is_temp_sudo = false;
+var HISTORY = [];
+var HISTORY_LAST = HISTORY.length;
 var FILE_LIST = [
     ".",
     "..",
@@ -16,6 +18,8 @@ var FILE_LIST = [
 async function loadTerm() {
     document.getElementById("terminal").append(terminal.html);
     terminal.setPrompt("Guest@edufdez-es:~$ ");
+    terminal.setUpCallback(historyUp);
+    terminal.setDownCallback(historyDown);
 
     await printHeader();
     await printMOTD();
@@ -29,6 +33,7 @@ async function loadTerm() {
  */
 async function commands(command) {
     var firstWord = trimSpaces(command).split(' ')[0];
+    saveCommands(command);
 
     switch (firstWord) {
         case "help":
@@ -310,4 +315,40 @@ function sleep(ms) {
 function trimSpaces(text) {
     return text.replace(/\s+/g, ' ').trim();
 }
+
+function saveCommands(command) {
+    if (trimSpaces(command)) {
+        HISTORY.push(command);
+        HISTORY_LAST = HISTORY.length;
+    }
+}
+
+function historyUp() {
+    var line = document.getElementById('inputLine');
+    line.textContent = terminal.getPrompt();
+
+    var input = document.getElementById('TermianlInput');
+    input.value = terminal.getPrompt();
+
+    if (HISTORY_LAST > 0) {
+        HISTORY_LAST--;
+        line.textContent += HISTORY[HISTORY_LAST];
+        document.getElementById('TermianlInput').value += HISTORY[HISTORY_LAST];
+    }
+}
+
+function historyDown() {
+    var line = document.getElementById('inputLine');
+    line.textContent = terminal.getPrompt();
+
+    var input = document.getElementById('TermianlInput');
+    input.value = terminal.getPrompt();
+
+    if (HISTORY_LAST < HISTORY.length) {
+        line.textContent += HISTORY[HISTORY_LAST];
+        document.getElementById('TermianlInput').value += HISTORY[HISTORY_LAST];
+        HISTORY_LAST++;
+    }  
+}
+
 //#endregion

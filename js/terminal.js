@@ -51,6 +51,15 @@ var Terminal = (function () {
             // keys in order: left, up, right, down, tab
             if (e.which === 37 || e.which === 38 || e.which === 39 || e.which === 40 || e.which === 9) {
                 e.preventDefault();
+
+                if (e.which === 38 && term.upCallback != null) {
+                    term.upCallback();
+                }
+
+                if (e.which === 40 && term.downCallback != null) {
+                    term.downCallback();
+                }
+
             } else if (e.which !== 13) { // enter key
                 if (e.which == 8) { // backspace key
                     if (term.inputLine.textContent.length <= prompt.length) { // this prevent the prompt to be removed
@@ -109,10 +118,14 @@ var Terminal = (function () {
         this.innerWindow = document.createElement('div');
         this.output = document.createElement('p');
         this.inputLine = document.createElement('span'); // the span element where the users input is put
+        this.inputLine.id = "inputLine";
         this.cursor = document.createElement('span');
         this._input = document.createElement('p'); // the full element administering the user input, including cursor
 
         this.cursorShoudBlink = true;
+
+        this.upCallback = null;
+        this.downCallback = null;
 
         this.println = function (msg) {
             if (msg == null) {
@@ -167,8 +180,20 @@ var Terminal = (function () {
             prompt = string;
         };
 
+        this.getPrompt = function () {
+            return prompt;
+        };
+
         this.blinkingCursor = function (bool) {
             this.cursorShoudBlink = bool;
+        };
+
+        this.setUpCallback = function (callback) {
+            this.upCallback = callback;
+        };
+
+        this.setDownCallback = function (callback) {
+            this.downCallback = callback;
         };
 
         this._input.appendChild(this.inputLine);

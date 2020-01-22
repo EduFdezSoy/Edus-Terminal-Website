@@ -1,4 +1,5 @@
 var terminal = new Terminal();
+var is_sudo = false;
 var FILE_LIST = [
     ".",
     "..",
@@ -50,7 +51,11 @@ async function commands(command) {
             break;
 
         case "touch":
-            await print("don't touch that!");
+            if(!is_sudo){
+                await print("don't touch that!");
+            }else{
+                await print("you touched that");
+            }
             break;
 
         case "cd":
@@ -62,7 +67,18 @@ async function commands(command) {
             break;
 
         case "rm":
-            await print("You don't have permisions.");
+            if(!is_sudo){
+                await print("You don't have permisions.");
+            }else{
+                deleteFile(command)
+            }
+            break;
+
+        case "exit":
+            if(is_sudo){
+                is_sudo = false;
+                terminal.setPrompt("Guest@edufdez-es:~$ ");
+            }
             break;
 
         default:
@@ -133,48 +149,57 @@ async function printCat(command) {
 }
 
 async function printSudo(command) {
-    words = trimSpaces(command).split(' ');
-    switch (words[1]) {
-        case "touch":
-            await print("you touched that");
-            break;
+    if(!is_sudo){
+        words = trimSpaces(command).split(' ');
+        switch (words[1]) {
+            case "touch":
+                await print("you touched that");
+                break;
 
-        case "cat":
-            if (words[2] == "." || words[2] == "..") {
-                print("What are you trying? This is not a real shell, there's nothing in there.");
-            } else {
-                var a = words[1] + " " + words[2];
-                printCat(a);
-            }
-            break;
+            case "cat":
+                if (words[2] == "." || words[2] == "..") {
+                    print("What are you trying? This is not a real shell, there's nothing in there.");
+                } else {
+                    var a = words[1] + " " + words[2];
+                    printCat(a);
+                }
+                break;
 
-        case "rm":
-            await deleteFile(command);
-            break;
+            case "rm":
+                await deleteFile(command);
+                break;
 
-        default:
-            terminal.setPrompt("Guest@edufdez-es:~# ");
-            await print("you have now super cow powers");
-            break;
+            default:
+                terminal.setPrompt("Guest@edufdez-es:~# ");
+                await print("you have now super cow powers");
+                is_sudo = true;
+                break;
+        }
+    }else{
+        await print("You can't do a sudo as sudo!");
     }
 }
 
 async function deleteFile(command) {
     words = trimSpaces(command).split(' ');
+    var NUM_PARAMS = 3;
+    if(is_sudo){
+        NUM_PARAMS = NUM_PARAMS - 1;
+    }
     // [0] is sudo, [1] is rm, [2] may be an arg and [3] a file or something
-    if (words.length == 3) {
-        var index = FILE_LIST.findIndex((e) => e == words[2]);
+    if (words.length == NUM_PARAMS) {
+        var index = FILE_LIST.findIndex((e) => e == words[NUM_PARAMS-1]);
         if (index != -1) {
             FILE_LIST.splice(index, 1);
             await print("File deleted");
         }
-    } else if (words.length == 4) {
-        if (words[2].toUpperCase() == "-RF") {
-            var index = FILE_LIST.findIndex((e) => e == words[3]);
+    } else if (words.length == NUM_PARAMS+1) {
+        if (words[NUM_PARAMS-1].toUpperCase() == "-RF") {
+            var index = FILE_LIST.findIndex((e) => e == words[NUM_PARAMS]);
             if (index != -1) {
                 FILE_LIST.splice(index, 1);
                 await print("File deleted");
-            } else if (words[3] == "/") {
+            } else if (words[NUM_PARAMS] == "/") {
                 terminal.blinkingCursor(false);
                 terminal.setPrompt(" ");
                 await sleep(5000);
@@ -194,14 +219,14 @@ async function deleteFile(command) {
                 await sleep(Number.MAX_VALUE);
             }
         } else {
-            var index = FILE_LIST.findIndex((e) => e == words[3]);
+            var index = FILE_LIST.findIndex((e) => e == words[NUM_PARAMS]);
             if (index != -1) {
                 FILE_LIST.splice(index, 1);
                 await print("File deleted");
             }
         }
     } else {
-        if (words.length < 3) {
+        if (words.length < NUM_PARAMS) {
             await print("Argument expected.");
         } else {
             await print("Too many arguments.");

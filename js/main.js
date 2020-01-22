@@ -75,10 +75,7 @@ async function commands(command) {
             break;
 
         case "exit":
-            if(is_sudo){
-                is_sudo = false;
-                terminal.setPrompt("Guest@edufdez-es:~$ ");
-            }
+            await doExit();
             break;
 
         default:
@@ -114,6 +111,20 @@ async function printHelp() {
 async function doClear() {
     terminal.clear();
     await printHeader();
+
+    return;
+}
+
+async function doExit() {
+    if (is_sudo) {
+        is_sudo = false;
+        terminal.setPrompt("Guest@edufdez-es:~$ ");
+    } else {
+        await print("Bye!");
+        console.log("I can't close this, I am JavaScript and do not have permissions to do that.");
+        await sleep(1000);
+        terminal.println();
+    }
 
     return;
 }

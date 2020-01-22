@@ -1,5 +1,6 @@
 var terminal = new Terminal();
 var is_sudo = false;
+var is_temp_sudo = false;
 var FILE_LIST = [
     ".",
     "..",
@@ -27,7 +28,7 @@ async function loadTerm() {
  * @param {String} command 
  */
 async function commands(command) {
-    firstWord = trimSpaces(command).split(' ')[0];
+    var firstWord = trimSpaces(command).split(' ')[0];
 
     switch (firstWord) {
         case "help":
@@ -47,15 +48,11 @@ async function commands(command) {
             break;
 
         case "sudo":
-            printSudo(command);
+            await doSudo(command);
             break;
 
         case "touch":
-            if(!is_sudo){
-                await print("don't touch that!");
-            }else{
-                await print("you touched that");
-            }
+            await printTouch();
             break;
 
         case "cd":
@@ -67,11 +64,7 @@ async function commands(command) {
             break;
 
         case "rm":
-            if(!is_sudo){
-                await print("You don't have permisions.");
-            }else{
-                deleteFile(command)
-            }
+            await deleteFile(command);
             break;
 
         case "exit":
@@ -146,7 +139,10 @@ async function printCat(command) {
         await print("Too many arguments");
     } else {
         if (words[1] == "." || words[1] == "..") {
-            print("You don't have permisions.");
+            if (is_sudo || is_temp_sudo)
+                await print("What are you trying? This is not a real shell, there's nothing in there.");
+            else
+                await print("You don't have permisions.");
         } else if (FILE_LIST.findIndex((element) => element == words[1]) != -1) {
             terminal.println();
             await loadText('txt/' + words[1] + '.html', print);
@@ -156,93 +152,117 @@ async function printCat(command) {
         }
     }
 
+    // remove temp sudo if it is set
+    if (is_temp_sudo)
+        is_temp_sudo = false;
+
     return;
 }
 
-async function printSudo(command) {
-    if(!is_sudo){
-        words = trimSpaces(command).split(' ');
-        switch (words[1]) {
-            case "touch":
-                await print("you touched that");
-                break;
+async function printTouch() {
+    if (is_sudo || is_temp_sudo)
+        await print("you touched that");
+    else
+        await print("don't touch that!");
 
-            case "cat":
-                if (words[2] == "." || words[2] == "..") {
-                    print("What are you trying? This is not a real shell, there's nothing in there.");
-                } else {
-                    var a = words[1] + " " + words[2];
-                    printCat(a);
-                }
-                break;
 
-            case "rm":
-                await deleteFile(command);
-                break;
+    // remove temp sudo if it is set
+    if (is_temp_sudo)
+        is_temp_sudo = false;
 
-            default:
-                terminal.setPrompt("Guest@edufdez-es:~# ");
-                await print("you have now super cow powers");
-                is_sudo = true;
-                break;
+    return;
+}
+
+async function doSudo(command) {
+    var words = trimSpaces(command).split(' ');
+
+    if (words[0] == "sudo") {
+        // if it is sudo su or only sudo 
+        if (words[1] == null || words[1] == "su") {
+            is_sudo = true;
+
+            terminal.setPrompt("Guest@edufdez-es:~# ");
+            await print("You have now Super Cow Powers.");
+        } else {
+            // if it is a command with sudo
+            is_temp_sudo = true;
+
+            command = "";
+            words.shift();
+            words.forEach(e => {
+                command += e + " ";
+            });
+
+            await commands(command);
         }
-    }else{
-        await print("You can't do a sudo as sudo!");
     }
+
+    return;
 }
 
 async function deleteFile(command) {
     words = trimSpaces(command).split(' ');
-    var NUM_PARAMS = 3;
-    if(is_sudo){
-        NUM_PARAMS = NUM_PARAMS - 1;
-    }
-    // [0] is sudo, [1] is rm, [2] may be an arg and [3] a file or something
-    if (words.length == NUM_PARAMS) {
-        var index = FILE_LIST.findIndex((e) => e == words[NUM_PARAMS-1]);
+
+    if (words.length == 2) { // [0] is rm, [1] a file or something
+        var index = FILE_LIST.findIndex((e) => e == words[1]);
         if (index != -1) {
             FILE_LIST.splice(index, 1);
-            await print("File deleted");
-        }
-    } else if (words.length == NUM_PARAMS+1) {
-        if (words[NUM_PARAMS-1].toUpperCase() == "-RF") {
-            var index = FILE_LIST.findIndex((e) => e == words[NUM_PARAMS]);
-            if (index != -1) {
-                FILE_LIST.splice(index, 1);
-                await print("File deleted");
-            } else if (words[NUM_PARAMS] == "/") {
-                terminal.blinkingCursor(false);
-                terminal.setPrompt(" ");
-                await sleep(5000);
-                terminal.clear();
-
-                document.getElementById('TermianlInput').style.display = 'none';
-            
-                await sleep(2000);
-                await print("You deleted everything.");
-                await sleep(2000);
-                await print("Are you satisfied?");
-                await sleep(20000);
-                terminal.println();
-                await print("There's nothing here anymore, go home.");
-                await sleep(2000);
-                await print("Or reload the page.");
-                await sleep(Number.MAX_VALUE);
-            }
+            await print("rm: File deleted");
         } else {
-            var index = FILE_LIST.findIndex((e) => e == words[NUM_PARAMS]);
-            if (index != -1) {
-                FILE_LIST.splice(index, 1);
-                await print("File deleted");
-            }
+            await print("rm: cannot remove '" + words[1] + "': No such file or directory");
+        }
+    } else if (words.length == 3) { // [0] is rm, [1] may be an arg and [2] a file or something
+        // if the file is in the list we delete it
+        var index = FILE_LIST.findIndex((e) => e == words[2]);
+        if (index != -1) {
+            FILE_LIST.splice(index, 1);
+            await print("rm: File deleted");
+        } else if (words[2] == "/") { // if we are deleting '/'
+            if (words[1].toUpperCase() == "-RF")
+                if (is_sudo || is_temp_sudo)
+                    await rmRfSlash();
+                else
+                    await print("rm: Permission denied");
+            else
+                await print("rm: invalid option " + words[1]);
+        } else {
+            await print("rm: cannot remove '" + words[2] + "': No such file or directory");
         }
     } else {
-        if (words.length < NUM_PARAMS) {
-            await print("Argument expected.");
+        if (words.length < 2) {
+            await print("rm: Argument expected.");
         } else {
-            await print("Too many arguments.");
+            await print("rm: Too many arguments.");
         }
     }
+
+    // remove temp sudo if it is set
+    if (is_temp_sudo)
+        is_temp_sudo = false;
+
+    return;
+}
+
+async function rmRfSlash() {
+    terminal.blinkingCursor(false);
+    terminal.setPrompt(" ");
+    await sleep(5000);
+    terminal.clear();
+
+    terminal.println();
+    await sleep(2000);
+    await print("You deleted everything.");
+    await sleep(3000);
+    await print("Are you satisfied?");
+    await sleep(20000);
+    terminal.println();
+    await print("There's nothing here anymore, go home.");
+    await sleep(5000);
+    await print("Or reload the page.");
+
+    // this will launch an exception, the element will not be in the html until this function ends
+    // but we dont want it to end so its ok
+    document.getElementById('TermianlInput').style.display = 'none';
 
     return;
 }

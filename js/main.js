@@ -12,7 +12,8 @@ var FILE_LIST = [
     "about-the-page",
     "socials",
     "contact",
-    "dear-recruiter"
+    "dear-recruiter",
+    "me.png"
 ];
 
 

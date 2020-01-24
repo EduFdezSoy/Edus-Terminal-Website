@@ -27,6 +27,18 @@ async function loadTerm() {
     await printMOTD();
 
     showPrompt();
+    await parseUrlVars(async function(vars){
+        if (vars.c != null) {
+            await sleep(500);
+            print("INSTRUCTIONS FOUND IN THE URL");
+            await sleep(200);
+            print("LAUNCHING COMMANDS...........");
+            terminal.println();
+            await sleep(500);
+            print(terminal.getPrompt() + vars.c);
+            await commands(vars.c);
+        }
+    });
 }
 
 /**
@@ -351,6 +363,15 @@ function historyDown() {
         document.getElementById('TermianlInput').value += HISTORY[HISTORY_LAST];
         HISTORY_LAST++;
     }  
+}
+
+function parseUrlVars(callback) {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+        vars[key] = value.replace('%20', ' ');
+    });
+
+    callback(vars);
 }
 
 //#endregion

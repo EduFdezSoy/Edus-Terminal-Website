@@ -49,6 +49,17 @@ a:active {
     color: rgb(183, 240, 240);
 }
 
+/* those rules where made for my own title, edufdez.es */
+@media all and (min-width: 300px) { .fit-screen { font-size:0.38em; } }
+@media all and (min-width: 400px) { .fit-screen { font-size:0.40em; } }
+@media all and (min-width: 420px) { .fit-screen { font-size:0.45em; } }
+@media all and (min-width: 460px) { .fit-screen { font-size:0.50em; } }
+@media all and (min-width: 550px) { .fit-screen { font-size:0.60em; } }
+@media all and (min-width: 640px) { .fit-screen { font-size:0.70em; } }
+@media all and (min-width: 740px) { .fit-screen { font-size:0.80em; } }
+@media all and (min-width: 830px) { .fit-screen { font-size:0.90em; } }
+@media all and (min-width: 920px) { .fit-screen { font-size:1.00em; } }
+
 /* flicker animation taken from http://goonhub.com/secret */
 .flicker {
     position      : fixed;

@@ -68,15 +68,12 @@ var Terminal = (function () {
                 }
                 setTimeout(function () {
                     term.inputLine.textContent = inputField.value;
+                    inputField.focus();
                 }, 1);
             }
-            
-            inputField.focus();
         };
 
         inputField.onkeyup = function (e) {
-            inputField.focus();
-            
             if (e.which === 13) { // enter key
                 terminal._input.style.display = 'none';
                 var inputValue = inputField.value;

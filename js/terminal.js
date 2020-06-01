@@ -70,6 +70,8 @@ var Terminal = (function () {
                     term.inputLine.textContent = inputField.value;
                 }, 1);
             }
+            
+            inputField.focus();
         };
 
         inputField.onkeyup = function (e) {

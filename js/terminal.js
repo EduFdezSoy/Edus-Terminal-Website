@@ -73,6 +73,8 @@ var Terminal = (function () {
         };
 
         inputField.onkeyup = function (e) {
+            inputField.focus();
+            
             if (e.which === 13) { // enter key
                 terminal._input.style.display = 'none';
                 var inputValue = inputField.value;

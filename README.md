@@ -1,4 +1,5 @@
-# Edu's Terminal Website
+# Edu's Terminal Website [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/EduFdezSoy)
+
 Just my site, you can see it in action at [edufdez.es](https://edufdez.es)
 
 

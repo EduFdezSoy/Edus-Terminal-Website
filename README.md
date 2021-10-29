@@ -4,7 +4,7 @@ Just my site, you can see it in action at [edufdez.es](https://edufdez.es)
 
 
 ## Description
-This is a really simple site writed in HTML, CSS and JavaScript, it works like a Linux Terminal but it just JS and a bunch of code.
+This is a really simple site writed in HTML, CSS and JavaScript, it works like a Linux Terminal but it's just JS and a bunch of code.
 
 This is a static site, but with some work it can work with some sort of API.
 
